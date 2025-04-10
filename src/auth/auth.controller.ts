@@ -5,25 +5,40 @@ import {
   UseGuards,
   Get,
   Request,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Role } from 'src/common/enums/role.enum';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  register(@Body() body: { email: string; password: string; role?: Role }) {
-    return this.authService.register(body.email, body.password, body.role);
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() user: CreateUserDto) {
+    const createdUser = await this.authService.register(user);
+    return {
+      status: 'success',
+      message: 'Usuario registrado correctamente',
+      data: {
+        id: createdUser.id,
+        email: createdUser.email,
+        role: createdUser.role,
+      },
+    };
   }
 
   @Post('login')
-  login(@Body() body: { email: string; password: string }) {
-    return this.authService.login(body.email, body.password);
+  async login(@Body() loginDto: LoginDto) {
+    const { email, password } = loginDto;
+    return this.authService.login(email, password);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
