@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Role } from 'src/common/enums/role.enum';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
@@ -23,9 +23,9 @@ export class AuthService {
       if (existingUser) {
         throw new ConflictException('El correo ya está registrado');
       }
-
+      console.log('userDto', userDto);
       const hashedPassword = await bcrypt.hash(userDto.password, 10); //get a basic hash with salt 10 as standards to encrypt the password
-
+      console.log('Hased', hashedPassword);
       const userData = {
         email: userDto.email,
         password: hashedPassword,
@@ -46,12 +46,29 @@ export class AuthService {
         throw error;
       }
       console.error('Error interno en Auth:', error);
-
       throw new InternalServerErrorException(
         'Ocurrió un error al registrar el usuario',
       );
     }
   }
+
+  /*   async register(user: CreateUserDto) {
+    try {
+      const hash = await bcrypt.hash(user.password, 10);
+
+      const userData = {
+        ...user,
+        password: hash,
+        role: Role.User,
+      };
+
+      const newUser = await this.usersService.create(userData);
+      return newUser;
+    } catch (error) {
+      console.error('Error en register:', error);
+      throw new InternalServerErrorException('Error al registrar el usuario');
+    }
+  } */
 
   async login(email: string, password: string) {
     try {

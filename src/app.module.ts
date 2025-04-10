@@ -21,7 +21,7 @@ import { Task } from './tasks/entities/task.entity';
         username: config.get('POSTGRES_USER'),
         password: config.get('POSTGRES_PASSWORD'),
         database: config.get('POSTGRES_DB'),
-        entities: [User, Task],
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
         autoLoadEntities: true,
       }),

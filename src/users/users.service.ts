@@ -21,7 +21,7 @@ export class UsersService {
       return await this.userRepo.save(newUser);
     } catch (error) {
       if (error.code === '23505') {
-        // existing array
+        // existing email
         throw new ConflictException('El email ya está registrado');
       }
 
