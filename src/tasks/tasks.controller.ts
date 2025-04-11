@@ -107,7 +107,7 @@ export class TasksController {
   @ApiUnauthorizedResponse({
     description: 'No autorizado, header de autorización falta o es inválido',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, TaskOwnerOrAdminGuard)
   @Roles(Role.User, Role.Admin) // only user or admin
   @UseInterceptors(
     FileInterceptor('image', {
@@ -148,7 +148,7 @@ export class TasksController {
   @ApiUnauthorizedResponse({
     description: 'No autorizado, header de autorización falta o es inválido',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, TaskOwnerOrAdminGuard)
   @Roles(Role.User, Role.Admin)
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.tasksService.remove(id);
