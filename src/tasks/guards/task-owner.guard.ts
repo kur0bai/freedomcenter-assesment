@@ -4,15 +4,11 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 import { TasksService } from '../tasks.service';
 
 @Injectable()
 export class TaskOwnerOrAdminGuard implements CanActivate {
-  constructor(
-    private readonly tasksService: TasksService,
-    private readonly reflector: Reflector,
-  ) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
