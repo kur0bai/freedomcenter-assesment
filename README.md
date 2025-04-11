@@ -32,6 +32,8 @@ In linux: `sudo systemctl status docker` or you can watch docker desktop on wind
 ```
 docker compose up --build -d
 docker compose logs -f  #optional for watching logs of the running server
+docker exec -it freedomcenter_postgres_db psql -U nest -d freedomcenter-assesment #to get in the database
+
 ```
 
 ### Notes:
