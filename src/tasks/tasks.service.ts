@@ -53,9 +53,17 @@ export class TasksService {
     }
   }
 
-  async create(data: CreateTaskDto, userId: number): Promise<Task> {
+  async create(
+    data: CreateTaskDto,
+    userId: number,
+    imgFilename?: string,
+  ): Promise<Task> {
     try {
-      const task = this.taskRepo.create({ ...data, user: { id: userId } });
+      const task = this.taskRepo.create({
+        ...data,
+        user: { id: userId },
+        image: imgFilename,
+      });
       return await this.taskRepo.save(task);
     } catch (error) {
       console.error('Error creating task:', error);

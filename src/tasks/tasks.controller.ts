@@ -10,6 +10,8 @@ import {
   Req,
   ParseIntPipe,
   Request,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -18,12 +20,15 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/common/enums/role.enum';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { TaskOwnerOrAdminGuard } from './guards/task-owner.guard';
 import {
   ApiHeader,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -58,6 +63,7 @@ export class TasksController {
     return this.tasksService.findOne(id);
   }
 
+  /* Create task, trying to upload images using multer :P */
   @Post()
   @ApiOperation({ summary: 'Crear una tarea' })
   @ApiHeader({
@@ -68,10 +74,27 @@ export class TasksController {
   @ApiUnauthorizedResponse({
     description: 'No autorizado, header de autorización falta o es inválido',
   })
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/tasks',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `task-${uniqueSuffix}${ext}`);
+        },
+      }),
+    }),
+  )
   @Roles(Role.User, Role.Admin)
-  async create(@Body() task: CreateTaskDto, @Req() req) {
+  async create(
+    @Body() task: CreateTaskDto,
+    @UploadedFile() image: Express.Multer.File,
+    @Req() req,
+  ) {
     const userId = req.user.userId;
-    return this.tasksService.create(task, userId);
+    return this.tasksService.create(task, userId, image?.filename);
   }
 
   @Patch(':id')

@@ -7,4 +7,7 @@ RUN npm install
 
 COPY . .
 
+# for upload files
+RUN mkdir -p ./uploads/tasks
+
 CMD ["npm", "run", "start:dev"]

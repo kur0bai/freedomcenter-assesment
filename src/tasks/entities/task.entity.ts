@@ -28,4 +28,7 @@ export class Task {
   @ManyToOne(() => User, (user) => user.tasks, { eager: false })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ nullable: true })
+  image?: string;
 }
