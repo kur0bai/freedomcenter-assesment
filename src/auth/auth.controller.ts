@@ -44,13 +44,6 @@ export class AuthController {
     return this.authService.login(email, password);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Admin)
-  @Get('admin')
-  adminRoute(@Request() req) {
-    return { message: 'Solo admin', user: req.user };
-  }
-
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Perfil del usuario' })
   @Get('profile')

@@ -8,6 +8,9 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from 'src/common/enums/role.enum';
+import { CreateAdminDto } from './dto/create-user-admin.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
@@ -44,6 +47,27 @@ export class UsersService {
     const newUser = this.userRepo.create({ ...user });
     try {
       return await this.userRepo.save(newUser);
+    } catch (error) {
+      if (error.code === '23505') {
+        // existing email
+        throw new ConflictException('El email ya está registrado');
+      }
+      console.error('Error al guardar usuario:', error);
+      throw new InternalServerErrorException('No se pudo registrar el usuario');
+    }
+  }
+
+  //Create admin
+  async createAdmin(dto: CreateAdminDto): Promise<User> {
+    try {
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      const adminUser = {
+        ...dto,
+        password: hashedPassword,
+        role: Role.Admin,
+      };
+
+      return this.create(adminUser);
     } catch (error) {
       if (error.code === '23505') {
         // existing email
