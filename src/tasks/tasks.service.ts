@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
@@ -19,39 +20,69 @@ export class TasksService {
   ) {}
 
   async findAll(user: User): Promise<Task[]> {
-    if (user.role === Role.Admin) {
-      return this.taskRepo.find({ relations: ['user'] });
+    try {
+      if (user.role === 'admin') {
+        return this.taskRepo.find({ relations: ['user'] });
+      }
+      // only user tasks :)
+      return this.taskRepo.find({
+        where: { user: { id: user.id } },
+        relations: ['user'],
+      });
+    } catch (error) {
+      console.error('Error al obtener tareas:', error);
+      throw new InternalServerErrorException(
+        'No se pudieron obtener las tareas',
+      );
     }
-    return this.taskRepo.find({
-      where: { user: { id: user.id } },
-      relations: ['user'],
-    });
   }
 
-  async findOne(id: number, user: User): Promise<Task> {
-    const task = await this.taskRepo.findOne({
-      where: { id },
-      relations: ['user'],
-    });
-    if (!task) throw new NotFoundException('Tarea no encontrada');
-    if (user.role !== Role.Admin && task.user.id !== user.id)
-      throw new ForbiddenException('No tienes acceso a esta tarea');
-    return task;
+  async findOne(id: number): Promise<Task> {
+    try {
+      const task = await this.taskRepo.findOne({
+        where: { id },
+        relations: ['user'],
+      });
+      if (!task) {
+        throw new NotFoundException(`Tarea con ID ${id} no encontrada`);
+      }
+      return task;
+    } catch (error) {
+      console.error('Error finding task:', error);
+      throw new InternalServerErrorException('No se pudo encontrar la tarea');
+    }
   }
 
-  async create(task: CreateTaskDto, user: User): Promise<Task> {
-    const newTask = this.taskRepo.create({ ...task, user });
-    return this.taskRepo.save(newTask);
+  async create(data: CreateTaskDto, userId: number): Promise<Task> {
+    try {
+      const task = this.taskRepo.create({ ...data, user: { id: userId } });
+      return await this.taskRepo.save(task);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      throw new InternalServerErrorException('No se pudo crear la tarea');
+    }
   }
-
   async update(id: number, dto: UpdateTaskDto, user: User): Promise<Task> {
-    const task = await this.findOne(id, user);
-    Object.assign(task, dto);
-    return this.taskRepo.save(task);
+    try {
+      console.log('us', user);
+      const task = await this.findOne(id);
+      // partial update
+      Object.assign(task, dto);
+      return await this.taskRepo.save(task);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      throw new InternalServerErrorException('No se pudo actualizar la tarea');
+    }
   }
 
-  async remove(id: number, user: User): Promise<void> {
-    const task = await this.findOne(id, user);
-    await this.taskRepo.remove(task);
+  async remove(id: number): Promise<object> {
+    try {
+      const task = await this.findOne(id);
+      await this.taskRepo.remove(task);
+      return { message: 'Tarea eliminada exitosamente' };
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      throw new InternalServerErrorException('No se pudo eliminar la tarea');
+    }
   }
 }
