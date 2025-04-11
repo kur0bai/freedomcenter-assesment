@@ -108,14 +108,30 @@ export class TasksController {
     description: 'No autorizado, header de autorización falta o es inválido',
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Admin) // solo user o admin pueden actualizar
+  @Roles(Role.User, Role.Admin) // only user or admin
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/tasks',
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${file.originalname}`;
+          cb(null, filename);
+        },
+      }),
+    }),
+  )
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateTaskDto,
+    @Body() task: UpdateTaskDto,
+    @UploadedFile() image: Express.Multer.File,
     @Request() req,
   ) {
     const user = req.user;
-    const updatedTask = await this.tasksService.update(id, dto, user);
+    const taskData = {
+      ...task,
+      ...(image ? { image: image.filename } : {}),
+    };
+    const updatedTask = await this.tasksService.update(id, task, user);
     return {
       message: 'Tarea actualizada exitosamente',
       data: updatedTask,
