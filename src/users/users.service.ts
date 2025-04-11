@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-import { Role } from 'src/common/enums/role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
@@ -16,7 +15,6 @@ export class UsersService {
   //Create a simple user with email, password and role, thinking in make user by default
   async create(user: CreateUserDto): Promise<User> {
     const newUser = this.userRepo.create({ ...user });
-
     try {
       return await this.userRepo.save(newUser);
     } catch (error) {
@@ -24,13 +22,19 @@ export class UsersService {
         // existing email
         throw new ConflictException('El email ya está registrado');
       }
-
       console.error('Error al guardar usuario:', error);
       throw new InternalServerErrorException('No se pudo registrar el usuario');
     }
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepo.findOne({ where: { email } });
+    try {
+      return this.userRepo.findOne({ where: { email } });
+    } catch (error) {
+      console.error('Error finding user by email:', error);
+      throw new InternalServerErrorException(
+        'No se pudo encontrar el usuario por email',
+      );
+    }
   }
 }
