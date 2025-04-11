@@ -11,7 +11,7 @@ async function bootstrap() {
     .setTitle('Freedomcenter Task API')
     .setDescription('The task API description')
     .setVersion('1.0')
-    .addTag('cats')
+    .addTag('tasks')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
